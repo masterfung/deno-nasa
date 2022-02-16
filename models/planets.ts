@@ -3,10 +3,25 @@ import { BufReader } from "https://deno.land/std@0.125.0/io/buffer.ts";
 import { parse } from "https://deno.land/std@0.125.0/encoding/csv.ts";
 import * as _ from "https://deno.land/x/lodash@4.17.15-es/lodash.js";
 import { join } from "https://deno.land/std@0.125.0/path/mod.ts";
+import * as log from "https://deno.land/std@0.125.0/log/mod.ts";
 
 type Planet = Record<string, string>;
 
 let planets: Array<Planet>;
+let logger = log.getLogger();
+
+export const filterHabitablePlanets = (planets: Array<Planet>) => {
+  return planets.filter(planet => {
+    const planetaryRadius = Number(planet["koi_prad"]);
+    const planetaryMass = Number(planet["koi_smass"]);
+    const stellarRadius = Number(planet["koi_srad"]);
+
+    return planet["koi_disposition"] === "CONFIRMED" 
+    && planetaryRadius > 0.5 && planetaryRadius < 1.5
+    && planetaryMass > 0.78 && planetaryMass < 1.04
+    && stellarRadius > 0.99 && stellarRadius < 1.01;
+  });
+}
 
 async function loadPlanetsData() {
   const pathName = join("data", "NASA_exoplanet.csv");
@@ -19,16 +34,7 @@ async function loadPlanetsData() {
 
   Deno.close(file.rid);
 
-  const planets = (result as Array<Planet>).filter(planet => {
-    const planetaryRadius = Number(planet["koi_prad"]);
-    const planetaryMass = Number(planet["koi_smass"]);
-    const stellarRadius = Number(planet["koi_srad"]);
-
-    return planet["koi_disposition"] === "CONFIRMED" 
-    && planetaryRadius > 0.5 && planetaryRadius < 1.5
-    && planetaryMass > 0.78 && planetaryMass < 1.04
-    && stellarRadius > 0.99 && stellarRadius < 1.01;
-  });
+  const planets = filterHabitablePlanets(result as Array<Planet>);
 
   return planets.map((planet) => {
     return _.pick(planet, [
@@ -45,6 +51,7 @@ async function loadPlanetsData() {
 }
 
 planets = await loadPlanetsData();
+logger.info(`${planets.length} habitable planets Have been found!`)
 
 export function getAllPlanets() {
   return planets;

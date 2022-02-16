@@ -1,13 +1,15 @@
 import { Application, send } from "https://deno.land/x/oak@v10.2.1/mod.ts";
 import router from "./api.ts";
+import * as log from "https://deno.land/std@0.125.0/log/mod.ts";
 
+let logger = log.getLogger();
 const app = new Application();
 app.use(router.routes());
 app.use(router.allowedMethods());
 
 app.use(async (ctx, next) => {
   await next();
-  console.log(`${ctx.request.method} ${ctx.request.url} ${ctx.response.headers.get("X-Response-Time")}`);
+  logger.info(`${ctx.request.method} ${ctx.request.url} ${ctx.response.headers.get("X-Response-Time")}`);
 });
 
 app.use(async (ctx, next) => {
@@ -24,7 +26,7 @@ app.use(async (ctx) => {
     "/javascripts/scripts.js",
     "/images/favicon.png",
     "/stylesheets/style.css"
-  ]
+  ];
   await send(ctx, filePath, {
     root: `${Deno.cwd()}/public`,
   });
