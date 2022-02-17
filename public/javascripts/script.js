@@ -18,6 +18,13 @@ function initValues() {
 function loadLaunches() {
   // TODO: Once API is ready.
   // Load launches and sort by flight number.
+  fetch("/launches")
+  .then(fetchedResponse => fetchedResponse.json())
+  .then(fetchedLaunches => {
+    launches = fetchedLaunches.sort((a,b) => {
+      return a.flightNumber < b.flightNumber;
+    })
+  })
 }
 
 async function loadPlanets() {

@@ -4,8 +4,23 @@ import * as log from "https://deno.land/std@0.125.0/log/mod.ts";
 
 let logger = log.getLogger();
 const app = new Application();
+const PORT = 8000;
 app.use(router.routes());
 app.use(router.allowedMethods());
+
+app.addEventListener("error", (event) => {
+  log.error(event.error);
+});
+
+app.use(async (ctx, next) => {
+  try {
+    await next();
+  } catch (error) {
+    logger.error(`An error has occurred with output of: ${error}!`);
+    ctx.response.body = "Internal Server Error.";
+    throw error;
+  }
+});
 
 app.use(async (ctx, next) => {
   await next();
@@ -33,5 +48,6 @@ app.use(async (ctx) => {
 });
 
 if (import.meta.main) {
-  await app.listen({ port: 8000 });
+  logger.info(`Starting app server at port ${PORT}...`)
+  await app.listen({ port: PORT });
 }
